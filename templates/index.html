@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome | Payment Portal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1f1c2c, #928dab);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 30px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+    }
+
+    .action-btn {
+      background-color: #ffffff;
+      color: #1f1c2c;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .action-btn:hover {
+      background-color: #ffdc80;
+      transform: scale(1.03);
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* --- Mobile-specific styles --- */
+    @media (max-width: 480px) {
+      .container {
+        padding: 25px;
+        border-radius: 16px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+      }
+
+      .action-btn {
+        padding: 12px;
+        font-size: 0.95rem;
+      }
+
+      footer {
+        font-size: 0.75rem;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Global Payment Portal</h1>
+    <p>Before logging in, tell us what you'd like to do today:</p>
+    <div class="btn-group">
+      <button class="action-btn" onclick="window.location.href='/select-service?action=make'">Make a Payment</button>
+      <button class="action-btn" onclick="window.location.href='/select-service?action=track'">Track a Payment</button>
+      <button class="action-btn" onclick="window.location.href='/select-service?action=cancel'">Cancel a Payment</button>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Global Inc. All rights reserved.
+  </footer>
+</body>
+</html>
