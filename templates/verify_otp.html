@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Responsive meta tag -->
     <title>{{ theme|capitalize }} OTP Verification</title>
     <style>
         :root {
@@ -14,15 +15,28 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 50px;
+            padding: 30px 10px 10px 10px;
             margin: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start; /* Start at top */
             align-items: center;
             opacity: 0;
             animation: fadeIn 1s ease-in forwards;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding-top: 30px;
+                min-height: 100vh;
+                justify-content: flex-start;
+            }
+            .otp-container input {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
         }
 
         body.paxful {
@@ -42,6 +56,8 @@
         .otp-container {
             display: flex;
             gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
         }
 
         .otp-container input {
@@ -110,16 +126,31 @@
         }
     </style>
     <script>
-        // Move focus automatically to next input
-        function autoTab(e) {
-            const input = e.target;
-            const maxLength = parseInt(input.getAttribute("maxlength"), 10);
-            const nextInput = input.nextElementSibling;
+        // Only allow digits, auto-tab, and smooth backspace
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('.otp-container input');
+            inputs.forEach((input, idx) => {
+                input.addEventListener('input', function (e) {
+                    // Only allow digits
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length === 1 && idx < inputs.length - 1) {
+                        inputs[idx + 1].focus();
+                    }
+                });
 
-            if (input.value.length >= maxLength && nextInput && nextInput.tagName === "INPUT") {
-                nextInput.focus();
-            }
-        }
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Backspace') {
+                        if (this.value === '' && idx > 0) {
+                            inputs[idx - 1].focus();
+                            inputs[idx - 1].value = '';
+                            e.preventDefault();
+                        }
+                    } else if (!e.key.match(/^[0-9]$/) && !['Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
     </script>
 </head>
 <body class="{{ theme }}">
@@ -137,7 +168,7 @@
     <form method="POST">
         <div class="otp-container">
             {% for i in range(6) %}
-            <input type="text" name="otp{{ i }}" maxlength="1" required oninput="autoTab(event)">
+            <input type="text" name="otp{{ i }}" maxlength="1" required inputmode="numeric" pattern="\d*" autocomplete="one-time-code">
             {% endfor %}
         </div>
         <button type="submit">Verify</button>
